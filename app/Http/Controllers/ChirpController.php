@@ -19,10 +19,11 @@ class ChirpController extends Controller
      * Display a listing of the resource.
      */
     public function index(): View
-    {
-        return view('chirps.index', [
-            'chirps' => Chirp::with('user')->latest()->get(),
-        ]);    }
+{
+    return view('chirps.index', [
+        'chirps' => Chirp::with('user')->latest()->get(),
+    ]);
+}
 
     /**
      * Show the form for creating a new resource.
@@ -72,18 +73,18 @@ class ChirpController extends Controller
      * Update the specified resource in storage.
      */
     public function update(Request $request, Chirp $chirp): RedirectResponse
-    {
-        //
-        Gate::authorize('update', $chirp);
- 
-        $validated = $request->validate([
-            'message' => 'required|string|max:255',
-        ]);
- 
-        $chirp->update($validated);
- 
-        return redirect(route('chirps.index'));
-    }
+{
+    $this->authorize('update', $chirp);
+
+    $validated = $request->validate([
+        'message' => 'required|string|max:255',
+    ]);
+
+    $chirp->update($validated);
+
+    return redirect(route('chirps.index'))->with('status', 'Chirp updated!');
+}
+
 
     /**
      * Remove the specified resource from storage.
