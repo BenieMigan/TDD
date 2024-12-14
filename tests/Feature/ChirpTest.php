@@ -111,6 +111,35 @@ public function test_un_utilisateur_peut_supprimer_son_chirp
         $response = $this->delete("/chirps/{$chirp->id}");
         $response->assertStatus(403);
     }
+   
+    public function test_contenu_vide_n_est_pas_accepte_lors_de_la_mise_a_jour()
+    {
+        $user = User::factory()->create();
+        $chirp = Chirp::factory()->create(['user_id' => $user->id]);
+
+        $this->actingAs($user);
+
+        $response = $this->put("/chirps/{$chirp->id}", [
+            'message' => '',
+        ]);
+
+        $response->assertSessionHasErrors(['message']);
+    }
+
+    public function test_contenu_trop_long_n_est_pas_accepte_lors_de_la_mise_a_jour()
+    {
+        $user = User::factory()->create();
+        $chirp = Chirp::factory()->create(['user_id' => $user->id]);
+
+        $this->actingAs($user);
+
+        $response = $this->put("/chirps/{$chirp->id}", [
+            'message' => str_repeat('a', 256),
+        ]);
+
+        $response->assertSessionHasErrors(['message']);
+    }
 }
+
 
 
