@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\User;
 use Carbon\Carbon;
+use App\Models\Like;
 use App\Models\Chirp;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -186,7 +187,41 @@ public function test_un_utilisateur_peut_supprimer_son_chirp
         $response->assertSee('Chirp récent');
         $response->assertDontSee('Chirp ancien');
     }
+
+    public function test_un_utilisateur_peut_liker_un_chirp()
+    {
+        $user = User::factory()->create();
+        $chirp = Chirp::factory()->create(['user_id' => $user->id]);
+
+        $this->actingAs($user);
+
+        $response = $this->post("/chirps/{$chirp->id}/like");
+
+        $response->assertStatus(302);
+        $this->assertDatabaseHas('likes', [
+            'user_id' => $user->id,
+            'chirp_id' => $chirp->id,
+        ]);
+    }
+
+    public function test_un_utilisateur_ne_peut_pas_liker_deux_fois_le_meme_chirp()
+    {
+        $user = User::factory()->create();
+        $chirp = Chirp::factory()->create(['user_id' => $user->id]);
+
+        $this->actingAs($user);
+
+        // Liker une première fois
+        $this->post("/chirps/{$chirp->id}/like");
+
+        // Tenter de liker une deuxième fois
+        $response = $this->post("/chirps/{$chirp->id}/like");
+
+        $response->assertSessionHasErrors(['message' => 'Vous avez déjà liké ce chirp.']);
+        $this->assertEquals(1, Like::where('user_id', $user->id)->where('chirp_id', $chirp->id)->count());
+    }
 }
+
 
 
 

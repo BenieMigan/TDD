@@ -116,4 +116,20 @@ class ChirpController extends Controller
  
         return redirect(route('chirps.index'));
     }
+
+    public function like(Chirp $chirp): RedirectResponse
+{
+    $user = auth()->user();
+
+    // Vérifier si l'utilisateur a déjà liké ce chirp
+    if ($chirp->likes()->where('user_id', $user->id)->exists()) {
+        return redirect(route('chirps.index'))->withErrors(['message' => 'Vous avez déjà liké ce chirp.']);
+    }
+
+    // Créer un like
+    $chirp->likes()->create(['user_id' => $user->id]);
+
+    return redirect(route('chirps.index'))->with('status', 'Chirp liked!');
+}
+
 }

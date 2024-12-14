@@ -31,6 +31,9 @@ Route::middleware('auth')->group(function () {
 Route::resource('chirps', ChirpController::class)
 ->only(['index', 'store', 'edit', 'update', 'destroy'])
 ->middleware(['auth', 'verified']);
+
+Route::post('/chirps/{chirp}/like', [ChirpController::class, 'like'])->name('chirps.like');
+
  
 
 require __DIR__.'/auth.php';
