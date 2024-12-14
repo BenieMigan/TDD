@@ -9,7 +9,7 @@ use Tests\TestCase;
 
 class ChirpTest extends TestCase
 {
-
+    use RefreshDatabase;
     /**
      * A basic feature test example.
      */
@@ -73,7 +73,7 @@ class ChirpTest extends TestCase
  $reponse = $this->put("/chirps/{$chirp->id}", [
  'message' => 'Chirp modifié'
  ]);
- $reponse->assertStatus(500);
+ $reponse->assertStatus(302);
  // Vérifie si le chirp existe dans la base de donnée.
  $this->assertDatabaseHas('chirps', [
  'id' => $chirp->id,
@@ -88,10 +88,29 @@ public function test_un_utilisateur_peut_supprimer_son_chirp
  $chirp = Chirp::factory()->create(['user_id' => $utilisateur->id]);
  $this->actingAs($utilisateur);
  $reponse = $this->delete("/chirps/{$chirp->id}");
- $reponse->assertStatus(500);
+ $reponse->assertStatus(302);
  $this->assertDatabaseMissing('chirps', [
     'id' => $chirp->id,
     ]);
    }
+    public function test_utilisateur_2_ne_peut_pas_modifier_ni_supprimer_le_chirp_de_utilisateur_1()
+    {
+        // Créer deux utilisateurs et un chirp pour l'utilisateur 1
+        $user1 = User::factory()->create();
+        $user2 = User::factory()->create();
+        $chirp = Chirp::factory()->create(['user_id' => $user1->id]);
 
+        // Tenter de modifier le chirp avec utilisateur 2
+        $this->actingAs($user2);
+        $response = $this->put("/chirps/{$chirp->id}", [
+            'message' => 'Attempted change by user 2',
+        ]);
+        $response->assertStatus(403);
+
+        // Tenter de supprimer le chirp avec utilisateur 2
+        $response = $this->delete("/chirps/{$chirp->id}");
+        $response->assertStatus(403);
+    }
 }
+
+
