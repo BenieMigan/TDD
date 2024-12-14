@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\User;
+use Carbon\Carbon;
 use App\Models\Chirp;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -159,7 +160,34 @@ public function test_un_utilisateur_peut_supprimer_son_chirp
         // Vérifier que la création échoue avec une erreur appropriée
         $response->assertSessionHasErrors(['message' => 'Vous avez atteint la limite de 10 chirps.']);
     }
+
+    public function test_seuls_les_chirps_recents_sont_affiches()
+    {
+        $user = User::factory()->create();
+
+        // Créer des chirps avec différentes dates
+        Chirp::factory()->create([
+            'user_id' => $user->id,
+            'message' => 'Chirp récent',
+            'created_at' => Carbon::now()->subDays(3),
+        ]);
+
+        Chirp::factory()->create([
+            'user_id' => $user->id,
+            'message' => 'Chirp ancien',
+            'created_at' => Carbon::now()->subDays(10),
+        ]);
+
+        $this->actingAs($user);
+
+        $response = $this->get('/chirps');
+
+        $response->assertStatus(200);
+        $response->assertSee('Chirp récent');
+        $response->assertDontSee('Chirp ancien');
+    }
 }
+
 
 
 

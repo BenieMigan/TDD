@@ -8,6 +8,7 @@ use Illuminate\Http\Response;
 use Illuminate\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Gate;
+use Carbon\Carbon; 
 
 
 
@@ -18,12 +19,21 @@ class ChirpController extends Controller
     /**
      * Display a listing of the resource.
      */
+
     public function index(): View
-{
-    return view('chirps.index', [
-        'chirps' => Chirp::with('user')->latest()->get(),
-    ]);
-}
+    {
+        $dateLimit = Carbon::now()->subDays(7);
+    
+        $chirps = Chirp::with('user')
+                    ->where('created_at', '>=', $dateLimit)
+                    ->latest()
+                    ->get();
+    
+        return view('chirps.index', [
+            'chirps' => $chirps,
+        ]);
+    }
+    
 
     /**
      * Show the form for creating a new resource.
