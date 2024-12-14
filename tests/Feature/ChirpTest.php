@@ -139,7 +139,28 @@ public function test_un_utilisateur_peut_supprimer_son_chirp
 
         $response->assertSessionHasErrors(['message']);
     }
+ 
+
+    public function test_un_utilisateur_ne_peut_pas_creer_un_11e_chirp()
+    {
+        $user = User::factory()->create();
+
+        // Créer 10 chirps pour l'utilisateur
+        Chirp::factory()->count(10)->create(['user_id' => $user->id]);
+
+        // Simuler l'authentification de l'utilisateur
+        $this->actingAs($user);
+
+        // Tenter de créer un 11e chirp
+        $response = $this->post('/chirps', [
+            'message' => 'Ceci est le 11e chirp',
+        ]);
+
+        // Vérifier que la création échoue avec une erreur appropriée
+        $response->assertSessionHasErrors(['message' => 'Vous avez atteint la limite de 10 chirps.']);
+    }
 }
+
 
 
 
